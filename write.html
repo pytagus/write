@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>write</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: rgb(227, 223, 217);
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body.dark-mode {
+            background-color: #1a1a1a;
+            color: #d6c9af;
+        }
+
+        .editor-container {
+            width: 70%;
+            max-width: 1200px;
+            min-width: 300px;
+            background: transparent;
+            padding: 0;
+            height: 70vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0 auto;
+        }
+
+        @media screen and (max-width: 800px) {
+            .editor-container {
+                width: 95%;
+            }
+        }
+
+        #editor {
+            width: 100%;
+            height: 100%;
+            padding: 2rem;
+            margin: 0 auto;
+            border: none;
+            background: transparent;
+            font-family: 'Inter', 'Segoe UI', sans-serif;
+            font-size: calc(14px + 0.4vw);
+            line-height: 1.5;
+            color: #2c3e50;
+            resize: none;
+            outline: none;
+            transition: color 0.3s ease;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            box-sizing: border-box;
+        }
+
+        #editor::-webkit-scrollbar {
+            display: none;
+        }
+
+        body.dark-mode #editor {
+            color: #e0e0e0;
+        }
+
+        body.dark-mode #editor::placeholder {
+            color: #666;
+        }
+
+        .toolbar {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            padding: 0.5rem;
+            background: transparent;
+            opacity: 0.3;
+            transition: opacity 0.3s ease;
+        }
+
+        .toolbar:hover {
+            opacity: 1;
+        }
+
+        .toolbar button {
+            padding: 8px 16px;
+            margin-left: 8px;
+            border: none;
+            border-radius: 20px;
+            background: #2c3e50;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s ease, background-color 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        body.dark-mode .toolbar button {
+            background: #4a4a4a;
+        }
+
+        .toolbar button:hover {
+            transform: translateY(-2px);
+        }
+
+        #editor::placeholder {
+            color: #95a5a6;
+            opacity: 0.5;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            background: #2c3e50;
+            color: white;
+            cursor: pointer;
+            opacity: 0.3;
+            transition: opacity 0.3s ease, transform 0.2s ease;
+        }
+
+        .theme-toggle:hover {
+            opacity: 1;
+            transform: translateY(-2px);
+        }
+
+        body.dark-mode .theme-toggle {
+            background: #4a4a4a;
+        }
+
+        .word-counter {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            padding: 8px 16px;
+            background: #2c3e50;
+            color: white;
+            border-radius: 20px;
+            opacity: 0.3;
+            transition: opacity 0.3s ease;
+        }
+
+        .word-counter:hover {
+            opacity: 1;
+        }
+
+        body.dark-mode .word-counter {
+            background: #4a4a4a;
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <div class="editor-container">
+        <div class="word-counter">0 words</div>
+        <div class="toolbar">
+            <button onclick="saveText()">Save</button>
+            <button onclick="clearText()">Clear</button>
+        </div>
+        <textarea id="editor" placeholder="Start writing... or drag a file"></textarea>
+    </div>
+
+    <script>
+        const APP_STORAGE_KEY = 'simpleEditor_content_v1';
+        const THEME_STORAGE_KEY = 'simpleEditor_theme_v1';
+        const editor = document.getElementById('editor');
+        const themeToggle = document.querySelector('.theme-toggle');
+        const wordCounter = document.querySelector('.word-counter');
+
+        // Fonction pour basculer le thème
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            localStorage.setItem(THEME_STORAGE_KEY, isDarkMode);
+            themeToggle.textContent = isDarkMode ? '☀️' : '🌙';
+        }
+
+        // Charger le thème préféré
+        function loadTheme() {
+            const isDarkMode = localStorage.getItem(THEME_STORAGE_KEY) === 'true';
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+                themeToggle.textContent = '☀️';
+            }
+        }
+
+        // Charger le thème au démarrage
+        loadTheme();
+
+        // Fonction de sauvegarde dans le localStorage
+        function saveToLocalStorage() {
+            localStorage.setItem(APP_STORAGE_KEY, editor.value);
+        }
+
+        // Chargement initial
+        editor.value = localStorage.getItem(APP_STORAGE_KEY) || '';
+
+        // Fonction pour compter les mots
+        function updateWordCount() {
+            const text = editor.value.trim();
+            const wordCount = text ? text.split(/\s+/).length : 0;
+            wordCounter.textContent = `${wordCount} mot${wordCount !== 1 ? 's' : ''}`;
+        }
+
+        // Mettre à jour le compteur lors de la saisie
+        editor.addEventListener('input', () => {
+            saveToLocalStorage();
+            updateWordCount();
+        });
+
+        // Mettre à jour le compteur au chargement initial
+        updateWordCount();
+
+        // Gestion du drag & drop
+        editor.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            editor.style.opacity = '0.7';
+        });
+
+        editor.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            editor.style.opacity = '1';
+        });
+
+        editor.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            editor.style.opacity = '1';
+
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    editor.value = event.target.result;
+                    saveToLocalStorage();
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        function saveText() {
+            const text = editor.value;
+            const blob = new Blob([text], {type: 'text/plain'});
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const fileName = 'texte_' + new Date().toISOString().slice(0,10) + '.txt';
+            a.href = url;
+            a.download = fileName;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function clearText() {
+            if(confirm('Do you really want to clear all the text?')) {
+                editor.value = '';
+                saveToLocalStorage();
+            }
+        }
+
+        // Gestion des raccourcis clavier
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + S pour sauvegarder
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                saveText();
+            }
+        });
+    </script>
+</body>
+</html>
