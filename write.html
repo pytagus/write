@@ -202,7 +202,7 @@
         function updateWordCount() {
             const text = editor.value.trim();
             const wordCount = text ? text.split(/\s+/).length : 0;
-            wordCounter.textContent = `${wordCount} mot${wordCount !== 1 ? 's' : ''}`;
+            wordCounter.textContent = `${wordCount} word${wordCount !== 1 ? 's' : ''}`;
         }
 
         // Mettre à jour le compteur lors de la saisie
